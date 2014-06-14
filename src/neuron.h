@@ -75,3 +75,7 @@ float cost_function(int n, float output[n], float output_correct[n]);
 int network_save_to_file(struct network *net, char *filename);
 
 int network_load_from_file(struct network *net, char *filename);
+
+int __new_network_save_to_file(struct network *net, char *filename);
+
+int __new_network_load_from_file(struct network *net, char *filename);
