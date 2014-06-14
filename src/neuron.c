@@ -416,3 +416,41 @@ int network_load_from_file(struct network *net, char *str)
     }
     return 0;
 }
+
+int __new_network_save_to_file(struct network *net, char *str)
+{
+    int l, n1, n2, fp = open(str, O_WRONLY | O_CREAT | O_TRUNC,
+                             S_IRUSR | S_IWUSR);
+    if (fp < 0) {
+        fprintf(stderr, "Could not open file %s\n", str);
+        return fp;
+    }
+
+    for (l = 1; l < net->n_layers; l++) {
+        for (n2 = 0; n2 < net->layers[l]->n_neurons; n2++) {
+            for (n1 = 0; n1 < net->layers[l-1]->n_neurons; n1++)
+                write(fp, &(net->weights[l][n1][n2]), sizeof(float));
+            write(fp, &(net->biases[l][n2]), sizeof(float));
+        }
+    }
+    return 0;
+}
+
+int __new_network_load_from_file(struct network *net, char *str)
+{
+    int l, n1, n2, fp = open(str, O_RDONLY, S_IRUSR);
+
+    if (fp < 0) {
+        fprintf(stderr, "Could not open file %s\n", str);
+        return fp;
+    }
+
+    for (l = 1; l < net->n_layers; l++) {
+        for (n2 = 0; n2 < net->layers[l]->n_neurons; n2++) {
+            for (n1 = 0; n1 < net->layers[l-1]->n_neurons; n1++)
+                read(fp, &(net->weights[l][n1][n2]), sizeof(float));
+            read(fp, &(net->biases[l][n2]), sizeof(float));
+        }
+    }
+    return 0;
+}
