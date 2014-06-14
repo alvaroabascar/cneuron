@@ -211,6 +211,7 @@ void calc_activs_deltas(struct network *net,
         }
         /* Compute derivative of the sums */
         diff_activation_function_vector(net->layers[l]->n_neurons,
+                                        sums, sums);
         /* Compute errors of current layer (deltas) */
         vscalarprod(net->layers[l]->n_neurons, deltas[l], deltas[l], sums);
     } 
