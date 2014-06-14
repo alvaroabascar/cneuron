@@ -456,16 +456,16 @@ int __new_network_load_from_file(struct network *net, char *str)
     /* 1. Number of layers */
     read(fp, &l, sizeof(int));
     if (l != net->n_layers) {
-        fprintf(stderr, "network_load_from_file:\n
-                         \tunexpected number of layers\n");
+        fprintf(stderr, "network_load_from_file:\n" \
+                         "\tunexpected number of layers\n");
         return -1;
     }
     /* 2. Number of neurons in each layer */
     for (l = 0; l < net->n_layers; l++) {
         read(fp, &n1, sizeof(int));
         if ((net->layers[l])->n_neurons != n1) {
-            fprintf(stderr, "network_load_from_file:\n"
-                "\tunexpected number of neurons in layer %d. Expected %d, but"
+            fprintf(stderr, "network_load_from_file:\n" \
+                "\tunexpected number of neurons in layer %d. Expected %d, but" \
                 " file contains %d", l, net->layers[l]->n_neurons, n1);
             return -1;
         }
