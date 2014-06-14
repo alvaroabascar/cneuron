@@ -381,26 +381,20 @@ float cost_function(int n, float output[n], float output_correct[n])
 
 int network_save_to_file(struct network *net, char *str)
 {
-<<<<<<< HEAD
-    int l, n1, n2, fp = open(str, O_WRONLY | O_CREAT | O_TRUNC,
-                             S_IRUSR | S_IWUSR);
-=======
     int l, n1, n2;
     int  fp = open(str, O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IWUSR);
     
->>>>>>> develop
     if (fp < 0) {
         fprintf(stderr, "Could not open file %s\n", str);
         return fp;
     }
-<<<<<<< HEAD
-=======
+
     /* 1. Number of layers */
     write(fp, &(net->n_layers), sizeof(int));
-    /* 1. Number of neurons in each layer */
+    /* 2. Number of neurons in each layer */
+
     for (l = 0; l < net->n_layers; l++)
         write(fp, &((net->layers[l])->n_neurons), sizeof(int));
->>>>>>> develop
 
     for (l = 1; l < net->n_layers; l++) {
         for (n2 = 0; n2 < net->layers[l]->n_neurons; n2++) {
