@@ -1,0 +1,7 @@
+[OK]
+1. Load / Save functions:
+    - Modify neuron.h and neuron.c
+        - Remove old functions
+        - Rename new functions to old name
+
+2. Check if the tests are working fine
