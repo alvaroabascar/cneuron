@@ -1,7 +1,9 @@
-[OK]
-1. Load / Save functions:
+
+1. Load / Save functions, add checks:
     - Modify neuron.h and neuron.c
         - Remove old functions
         - Rename new functions to old name
 
-2. Check if the tests are working fine
+2. Take vector handling functions out of neuron.c!!
+
+3. Check whether the tests are working fine
