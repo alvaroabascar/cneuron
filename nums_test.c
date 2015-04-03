@@ -7,7 +7,7 @@
 #undef RAND_MAX
 #define RAND_MAX 59999
 
-#define EPOCHES 4
+#define EPOCHES 5
 #define BATCHES 6000
 #define BATCH_SIZE 10
 
@@ -30,7 +30,7 @@ void get_images_labels()
     int train_lab = open(TRAIN_LABEL_PATH, O_RDONLY, S_IRUSR);
     int test_img = open(TEST_IMG_PATH, O_RDONLY, S_IRUSR);
     int test_lab = open(TEST_LABEL_PATH, O_RDONLY, S_IRUSR);
-    
+
     printf("Reading training data... ");
     fflush(stdout);
     lseek(train_lab, 8, SEEK_SET);
@@ -78,20 +78,24 @@ void test(struct network *net, int epoch) {
     }
     if (hits > maxhits) {
         maxhits = hits;
-        network_save_to_file(net, "mynet.net");
+        /* network_save_to_file(net, "mynet.net"); */
     }
     printf("Epoch %d: %d / 10000 (%.2f%%)\n", epoch, hits,(float)hits/100);
+}
+
+void logging(struct network *net, int epoch) {
+  printf("Epoch %d completed.\n", epoch);
 }
 
 int main(int argc, char *argv[])
 {
     struct network *net;
     get_images_labels();
-    int net_structure[2] = {784, 10};
+    int net_structure[3] = {784, 30, 10};
 
     printf("Creating network... ");
-    net = create_network(2, net_structure);
-    /*network_load_from_file(net, "mynet.net");*/
+    net = create_network(3, net_structure);
+    /* network_load_from_file(net, "mynet.net"); */
     printf("[OK]\n");
     network_SGD(net, 60000, BATCH_SIZE, EPOCHES, training_images,
                 training_labels, 3, test);
