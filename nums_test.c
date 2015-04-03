@@ -8,8 +8,8 @@
 #define RAND_MAX 59999
 
 #define EPOCHES 4
-#define BATCHES 600
-#define BATCH_SIZE 100
+#define BATCHES 6000
+#define BATCH_SIZE 10
 
 #define TRAIN_IMG_PATH "nums/train-images-idx3-ubyte"
 #define TRAIN_LABEL_PATH "nums/train-labels-idx1-ubyte"
@@ -32,6 +32,7 @@ void get_images_labels()
     int test_lab = open(TEST_LABEL_PATH, O_RDONLY, S_IRUSR);
     
     printf("Reading training data... ");
+    fflush(stdout);
     lseek(train_lab, 8, SEEK_SET);
     lseek(train_img, 16, SEEK_SET);
     for (i = 0; i < 60000; i++) {
@@ -45,8 +46,10 @@ void get_images_labels()
         }
     }
     printf("[OK]\n");
+    fflush(stdout);
 
     printf("Reading test data... ");
+    fflush(stdout);
     lseek(test_lab, 8, SEEK_SET); /* offset 8 */
     lseek(test_img, 16, SEEK_SET);
     for (i = 0; i < 10000; i++) {
@@ -60,6 +63,7 @@ void get_images_labels()
         }
     }
     printf("[OK]\n");
+    fflush(stdout);
 }
 
 void test(struct network *net, int epoch) {
@@ -76,7 +80,7 @@ void test(struct network *net, int epoch) {
         maxhits = hits;
         network_save_to_file(net, "mynet.net");
     }
-    printf("Epoch %d: %d / 10000 (%.2f%)\n", epoch, hits,(float)hits/100);
+    printf("Epoch %d: %d / 10000 (%.2f%%)\n", epoch, hits,(float)hits/100);
 }
 
 int main(int argc, char *argv[])
