@@ -1,7 +1,7 @@
-objs = ../neuron.o ../matrix.o
-progs  = nums_test save_test faces_test myface_test
+objs = ../neuron.o ../mad/matrix/matrix.o
+progs  = create_net_test feedforward_test
 
-CFLAGS = -I../
+CFLAGS = -I../ -I../mad/matrix/
 LDLIBS = -lm
 CC = gcc
 
@@ -14,3 +14,5 @@ nums_test: $(objs)
 save_test: $(objs)
 faces_test: $(objs)
 myface_test: $(objs)
+create_net_test: $(objs)
+feedforward_test: $(objs)
