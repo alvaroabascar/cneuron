@@ -1,7 +1,7 @@
-objs = ../neuron.o ../mad/matrix/matrix.o
-progs  = create_net_test feedforward_test
+objs = ../neuron.o ../mad/matrix/matrix.o ../mad/random/random.o
+progs  = create_net_test feedforward_test save_test
 
-CFLAGS = -I../ -I../mad/matrix/
+CFLAGS = -I../ -I../mad/matrix/ -I../mad/random/
 LDLIBS = -lm
 CC = gcc
 
