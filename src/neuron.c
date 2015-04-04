@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include <stdlib.h>
 #include <neuron.h>
 #include <matrix.h>
+#include <random.h>
 
 /* allocate space and return a network */
 struct network create_network(int n_layers, int *net_structure)
@@ -33,6 +35,23 @@ struct network create_network(int n_layers, int *net_structure)
                                          net_structure[i]);
   }
   return net;
+}
+
+/* Add random weights and biases, distributed normally with mean 0 and
+ * standard deviation 1.
+ */
+void set_random_weights_biases(struct network net)
+{
+  int i, j, k;
+  long seed = time(NULL);
+  for (i = 0; i < net.n_layers-1; i++) {
+    for (j = 0; j < net.net_structure[i+1]; j++) {
+      net.biases[i].data[j][0] = (double) gauss0(&seed);
+      for (k = 0; k < net.net_structure[i]; k++) {
+        net.weights[i].data[j][k] = (double) gauss0(&seed);
+      }
+    }
+  }
 }
 
 /* free the memory used for a network. */
@@ -77,6 +96,58 @@ void feedforward(struct network net, double *input, double *output)
   }
   copy_col_matrix_double(activations, output, 0);
 }
+
+/* Save weights and biases in binary format, to the specified file */
+void save_network(struct network net, char *filename)
+{
+  int l, i, j, n_neurons, n_neurons_prev;
+  FILE *ptr = fopen(filename, "wb");
+  /* an int indicating the number of layers */
+  fwrite(&net.n_layers, sizeof(net.n_layers), 1, ptr);
+  /* an int per layer indicating the number of neurons in that layer */
+  fwrite(net.net_structure, sizeof(net.net_structure[l]), net.n_layers, ptr);
+  /* for each layer, all the biases and all the weights */
+  for (l = 0; l < net.n_layers-1; l++) {
+    n_neurons = net.net_structure[l+1];
+    n_neurons_prev = net.net_structure[l];
+    /* save all biases and weights of the layer */
+    for (i = 0; i < n_neurons; i++) {
+      fwrite(&net.biases[l].data[i][0], sizeof(double), 1, ptr);
+      for (j = 0; j < n_neurons_prev; j++) {
+        fwrite(&net.weights[l].data[i][j], sizeof(double), 1, ptr);
+      }
+    }
+  }
+  fclose(ptr);
+}
+
+/* Load weights and biases in binary format from the specified file */
+struct network load_network(char *filename)
+{
+  int l, i, j, n_layers, *net_structure, n_neurons, n_neurons_prev;
+  FILE *ptr = fopen(filename, "rb");
+  /* read number of layers */
+  fread(&n_layers, sizeof(int), 1, ptr);
+  /* allocate space for array of ints (one int per layer) */
+  net_structure = malloc(n_layers * sizeof(int));
+  fread(net_structure, sizeof(int), n_layers, ptr);
+  struct network net = create_network(n_layers, net_structure);
+  for (l = 0; l < n_layers-1; l++) {
+    n_neurons = net_structure[l+1];
+    n_neurons_prev = net_structure[l];
+    for (i = 0; i < n_neurons; i++) {
+      fread(&net.biases[l].data[i][0], sizeof(double), 1, ptr);
+      for (j = 0; j < n_neurons_prev; j++) {
+        fread(&net.weights[l].data[i][j], sizeof(double), 1, ptr);
+      }
+    }
+  }
+  free(net_structure);
+  return net;
+}
+
+
+
 
 /* apply sigmoid function to all elements of matrix */
 void vectorized_sigma(matrix_double matrix)

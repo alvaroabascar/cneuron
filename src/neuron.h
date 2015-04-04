@@ -11,7 +11,11 @@ struct network create_network(int n_layers, int *n_neurons);
 
 void destroy_network(struct network net);
 
-void network_set_random_weights_biases(struct network net);
+void set_random_weights_biases(struct network net);
+
+void save_network(struct network net, char *filename);
+
+struct network load_network(char *filename);
 
 void feedforward(struct network net, double *input, double *output);
 
