@@ -80,7 +80,7 @@ void feedforward(struct network net, double *input, double *output)
    */
   maxsize = absmax_array_int(net.n_layers, net.net_structure);
   matrix_double activations = alloc_matrix_double(net.net_structure[0], 1);
-  matrix_double zs = alloc_matrix_double(net.net_structure[1], 1);
+  matrix_double zs;
   /* first set of activations are the input to the network */
   set_column_matrix_double(activations, input, 0);
 
@@ -93,8 +93,10 @@ void feedforward(struct network net, double *input, double *output)
     vectorized_sigma(zs);
     free_matrix_double(activations);
     activations = copy_matrix_double(zs);
+    free_matrix_double(zs);
   }
   copy_col_matrix_double(activations, output, 0);
+  free_matrix_double(activations);
 }
 
 /* Save weights and biases in binary format, to the specified file */
@@ -146,8 +148,57 @@ struct network load_network(char *filename)
   return net;
 }
 
+/* Stochastic Gradient Descent
+ *
+ * Parameters:
+ *   net -> network to be trained.
+ *   training_data -> matrix of inputs. Each column is an input.
+ *   training_data_labels -> matrix of outputs. Each column is an output.
+ *   epochs -> number of runs across the whole training set.
+ *   mini_batch_size -> number of training inputs to use in each
+ *                      run of the backpropagation.
+ *
+ */
+void network_SGD(struct network net, matrix_double training_data,
+                 matrix_double training_labels, int epochs,
+                 int mini_batch_size, double eta)
+{
+  int i, j, k, data_size = training_data.ncols;
+  matrix_double mini_batch_data, mini_batch_labels;
+  struct pair_coordinates section;
+  for (i = 0; i < epochs; i++) {
+    shuffle_data(training_data, training_labels);
+    for (j = 0; j < data_size; j += mini_batch_size) {
+      /* extract a mini batch of size mini_batch_size (if possible)
+       * or with all the remaining training cases.
+       */
+      k = j + mini_batch_size;
+      k = k >= data_size ? data_size - 1: k;
+      section.a = (struct coordinate) { .row = 0, .col = j };
+      section.b = (struct coordinate) { .row = training_data.nrows, .col = k };
+      mini_batch_data = extract_section_matrix_double(training_data, section);
+      mini_batch_labels = extract_section_matrix_double(training_labels,
+                                                        section);
+      network_backprop(net, mini_batch_data, mini_batch_labels);
 
+    }
+  }
+}
 
+void network_backprop(struct network net, matrix_double training_data,
+                      matrix_double training_labels)
+{
+}
+
+void shuffle_data(matrix_double data, matrix_double labels)
+{
+  int i, j;
+  for (i = data.ncols; i >= 1; i--) {
+    j = rand_lim(i);
+    interchange_cols_matrix_double(data, i, j);
+    interchange_cols_matrix_double(labels, i, j);
+  }
+}
 
 /* apply sigmoid function to all elements of matrix */
 void vectorized_sigma(matrix_double matrix)

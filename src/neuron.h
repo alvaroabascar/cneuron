@@ -19,6 +19,15 @@ struct network load_network(char *filename);
 
 void feedforward(struct network net, double *input, double *output);
 
+void network_SGD(struct network net, matrix_double training_data,
+                 matrix_double training_labels, int epochs,
+                 int mini_batch_size, double eta);
+
+void network_backprop(struct network net, matrix_double training_data,
+                      matrix_double training_labels);
+
+void shuffle_data(matrix_double data, matrix_double labels);
+
 void vectorized_sigma(matrix_double matrix);
 
 double sigma(double x);

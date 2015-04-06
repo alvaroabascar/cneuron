@@ -1,5 +1,5 @@
 objs = ../neuron.o ../mad/matrix/matrix.o ../mad/random/random.o
-progs  = create_net_test feedforward_test save_test
+progs  = create_net_test feedforward_test save_test sgd_test
 
 CFLAGS = -I../ -I../mad/matrix/ -I../mad/random/
 LDLIBS = -lm
@@ -16,3 +16,4 @@ faces_test: $(objs)
 myface_test: $(objs)
 create_net_test: $(objs)
 feedforward_test: $(objs)
+sgd_test: $(objs)
