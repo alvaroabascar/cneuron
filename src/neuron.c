@@ -182,7 +182,8 @@ void network_SGD(struct network net, matrix_double training_data,
       mini_batch_labels = extract_section_matrix_double(training_labels,
                                                         section);
       network_backprop(net, mini_batch_data, mini_batch_labels);
-
+      free_matrix_double(mini_batch_data);
+      free_matrix_double(mini_batch_labels);
     }
   }
 }
