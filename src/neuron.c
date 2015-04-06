@@ -178,6 +178,7 @@ void network_SGD(struct network net, matrix_double training_data,
       section.a = (struct coordinate) { .row = 0, .col = j };
       section.b = (struct coordinate) { .row = training_data.nrows, .col = k };
       mini_batch_data = extract_section_matrix_double(training_data, section);
+      section.b.row = training_labels.nrows;
       mini_batch_labels = extract_section_matrix_double(training_labels,
                                                         section);
       network_backprop(net, mini_batch_data, mini_batch_labels);
@@ -189,12 +190,14 @@ void network_SGD(struct network net, matrix_double training_data,
 void network_backprop(struct network net, matrix_double training_data,
                       matrix_double training_labels)
 {
+  static int i = 0;
+  printf("backprop %d\n", ++i);
 }
 
 void shuffle_data(matrix_double data, matrix_double labels)
 {
   int i, j;
-  for (i = data.ncols; i >= 1; i--) {
+  for (i = data.ncols-1; i >= 1; i--) {
     j = rand_lim(i);
     interchange_cols_matrix_double(data, i, j);
     interchange_cols_matrix_double(labels, i, j);
