@@ -145,6 +145,7 @@ struct network load_network(char *filename)
     }
   }
   free(net_structure);
+  fclose(ptr);
   return net;
 }
 
