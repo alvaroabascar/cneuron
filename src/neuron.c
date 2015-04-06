@@ -191,8 +191,53 @@ void network_SGD(struct network net, matrix_double training_data,
 void network_backprop(struct network net, matrix_double training_data,
                       matrix_double training_labels)
 {
-  static int i = 0;
-  printf("backprop %d\n", ++i);
+  int i, l;
+  double tmp[training_data.nrows];
+  /* activation[i][j] = activation of jth layer, for the input number "i"
+   * zs[i][j] = weighted inputs of jth layer, for input number "i"
+   */
+  matrix_double **activation, **zs;
+  activation = malloc(sizeof(matrix_double *) * training_data.ncols);
+  zs = malloc(sizeof(matrix_double *) * training_data.ncols);
+  /* for each training input... */
+  for (i = 0; i < training_data.ncols; i++) {
+    activation[i] = malloc(sizeof(matrix_double) * net.n_layers);
+    zs[i] = malloc(sizeof(matrix_double) * net.n_layers);
+    /* STEP 1: set the inputs
+     * allocate a matrix (1 column) for the activations of first layer,
+     * fill it with the inputs.
+     */
+    activation[i][0] = alloc_matrix_double(net.net_structure[0], 1);
+    zs[i][0] = alloc_matrix_double(net.net_structure[0], 1);
+    /* fill column 0 with the "ith" inputs (column "i" of training_data) */
+    copy_col_matrix_double(training_data, tmp, 0);
+    set_column_matrix_double(activation[i][0], tmp, 0);
+    /* STEP 2: feedforward
+     * we keep in memory the weighted inputs and activations.
+     */
+    for (l = 1; l < net.n_layers; l++) {
+      /* allocate a matrix (1 column) for the activations of layer "l"  */
+      zs[i][l] = matrix_product_matrix_double(net.weights[l-1],
+                                              activation[i][l-1]);
+       /* We must apply the sigmoid function to get the activations. */
+      activation[i][l] = copy_matrix_double(zs[i][l]);
+      vectorized_sigma(activation[i][l]);
+    }
+  }
+
+
+
+  /* clean up */
+  for (i = 0; i < training_data.ncols; i++) {
+    for (l = 0; l < net.n_layers; l++) {
+      free_matrix_double(activation[i][l]);
+      free_matrix_double(zs[i][l]);
+    }
+    free(activation[i]);
+    free(zs[i]);
+  }
+  free(activation);
+  free(zs);
 }
 
 void shuffle_data(matrix_double data, matrix_double labels)
