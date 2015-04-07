@@ -74,29 +74,29 @@ void destroy_network(struct network net)
  */
 void feedforward(struct network net, double *input, double *output)
 {
-  int i, maxsize;
-  /* allocate enough space for the activations and weighted inputs (zs) of
-   * the largest layer
-   */
-  maxsize = absmax_array_int(net.n_layers, net.net_structure);
-  matrix_double activations = alloc_matrix_double(net.net_structure[0], 1);
-  matrix_double zs;
-  /* first set of activations are the input to the network */
-  set_column_matrix_double(activations, input, 0);
+  int l;
+  matrix_double activation, zs;
+  /* fill activation (vertical vector) with the inputs */
+  activation = alloc_matrix_double(net.net_structure[0], 1);
+  set_column_matrix_double(activation, input, 0);
 
-  for (i = 0; i < net.n_layers-1; i++) {
-    /* multiply weights by activations, get weighted inputs of the new layer */
-    zs = matrix_product_matrix_double(net.weights[i], activations);
-    /* add biases */
-    add_matrix_to_matrix_double(net.biases[i], zs);
-    /* turn weighted input into activations */
-    vectorized_sigma(zs);
-    free_matrix_double(activations);
-    activations = copy_matrix_double(zs);
+  for (l = 1; l < net.n_layers; l++) {
+    /* DEBUG */
+    printf("layer %d\n", l);
+    printf("weights[%d]:\n", l-1);
+    print_matrix_double(net.weights[l-1]);
+    /*********/
+    /* allocate a matrix (1 column) for the weighted inputs of layer "l" */
+    zs = matrix_product_matrix_double(net.weights[l-1], activation);
+    free_matrix_double(activation);
+    /* we must apply the sigmoid function to get the activations. */
+    activation = copy_matrix_double(zs);
+    vectorized_sigma(activation);
     free_matrix_double(zs);
   }
-  copy_col_matrix_double(activations, output, 0);
-  free_matrix_double(activations);
+  /* copy the last activations (output from the net) into the output vector */
+  copy_col_matrix_double(activation, output, 0);
+  free_matrix_double(activation);
 }
 
 /* Save weights and biases in binary format, to the specified file */
