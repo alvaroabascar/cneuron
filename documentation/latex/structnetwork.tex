@@ -1,0 +1,33 @@
+\hypertarget{structnetwork}{}\section{network Struct Reference}
+\label{structnetwork}\index{network@{network}}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structnetwork_a13ab19c09fdf154f005980abfd712b32}{n\+\_\+layers}
+\item 
+matrix\+\_\+double $\ast$ \hyperlink{structnetwork_a58345ad56c0c6020859c71dd4440afbc}{biases}
+\item 
+matrix\+\_\+double $\ast$ \hyperlink{structnetwork_aedd3f7e4b716b6f9cdd75a956f1f8af4}{weights}
+\item 
+int $\ast$ \hyperlink{structnetwork_a127a5087949957286cd3d7ac0b27edb4}{net\+\_\+structure}
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structnetwork_a58345ad56c0c6020859c71dd4440afbc}{}\index{network@{network}!biases@{biases}}
+\index{biases@{biases}!network@{network}}
+\subsubsection[{biases}]{\setlength{\rightskip}{0pt plus 5cm}matrix\+\_\+double$\ast$ network\+::biases}\label{structnetwork_a58345ad56c0c6020859c71dd4440afbc}
+Array of matrices for the biases. Each matrix will actually contain a single column, with biases\mbox{[}i\mbox{]}\mbox{[}k\mbox{]} containing the bias of the kth neuron in layer \char`\"{}i\char`\"{}. \hypertarget{structnetwork_a13ab19c09fdf154f005980abfd712b32}{}\index{network@{network}!n\+\_\+layers@{n\+\_\+layers}}
+\index{n\+\_\+layers@{n\+\_\+layers}!network@{network}}
+\subsubsection[{n\+\_\+layers}]{\setlength{\rightskip}{0pt plus 5cm}int network\+::n\+\_\+layers}\label{structnetwork_a13ab19c09fdf154f005980abfd712b32}
+Number of layers of the network, including input and output layers. \hypertarget{structnetwork_a127a5087949957286cd3d7ac0b27edb4}{}\index{network@{network}!net\+\_\+structure@{net\+\_\+structure}}
+\index{net\+\_\+structure@{net\+\_\+structure}!network@{network}}
+\subsubsection[{net\+\_\+structure}]{\setlength{\rightskip}{0pt plus 5cm}int$\ast$ network\+::net\+\_\+structure}\label{structnetwork_a127a5087949957286cd3d7ac0b27edb4}
+Array indicating the number of neurons in each layer. Eg. for a net with 1, 20 and 10 neurons, net\+\_\+structure = \{1, 20, 10\} \hypertarget{structnetwork_aedd3f7e4b716b6f9cdd75a956f1f8af4}{}\index{network@{network}!weights@{weights}}
+\index{weights@{weights}!network@{network}}
+\subsubsection[{weights}]{\setlength{\rightskip}{0pt plus 5cm}matrix\+\_\+double$\ast$ network\+::weights}\label{structnetwork_aedd3f7e4b716b6f9cdd75a956f1f8af4}
+Array of matrices for the weights. weights\mbox{[}i\mbox{]}\mbox{[}j\mbox{]}\mbox{[}k\mbox{]} will contain the weight which links neuron \char`\"{}k\char`\"{} in layer \char`\"{}i\char`\"{} with neuron \char`\"{}j\char`\"{} in layer \char`\"{}i+1\char`\"{} 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{neuron_8h}{neuron.\+h}\end{DoxyCompactItemize}

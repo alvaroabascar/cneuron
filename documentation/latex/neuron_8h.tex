@@ -1,0 +1,153 @@
+\hypertarget{neuron_8h}{}\section{neuron.\+h File Reference}
+\label{neuron_8h}\index{neuron.\+h@{neuron.\+h}}
+
+
+Interface to c\+Neuron.  
+
+
+{\ttfamily \#include $<$matrix.\+h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structnetwork}{network}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structnetwork}{network} \hyperlink{neuron_8h_ad245baf72a54be50db3a8dfff5c65685}{create\+\_\+network} (int n\+\_\+layers, int $\ast$n\+\_\+neurons)
+\item 
+void \hyperlink{neuron_8h_a1538aaa323b555618735cd945a0683e7}{destroy\+\_\+network} (struct \hyperlink{structnetwork}{network} net)
+\item 
+void \hyperlink{neuron_8h_afdac54269b3cfb4fce5ac8876375398d}{set\+\_\+random\+\_\+weights\+\_\+biases} (struct \hyperlink{structnetwork}{network} net)
+\item 
+void \hyperlink{neuron_8h_af5f94200073974e51d9edf891a84ec24}{save\+\_\+network} (struct \hyperlink{structnetwork}{network} net, char $\ast$filename)
+\item 
+struct \hyperlink{structnetwork}{network} \hyperlink{neuron_8h_a70a31e04f5db89c6ec4b32abe04119b8}{load\+\_\+network} (char $\ast$filename)
+\item 
+void \hyperlink{neuron_8h_a12e977cbbe5d8fd519da65e2e35a635e}{feedforward} (struct \hyperlink{structnetwork}{network} net, double $\ast$input, double $\ast$output)
+\item 
+void \hyperlink{neuron_8h_a8a4dfceb11ba2abf1a02c600bcd0c730}{network\+\_\+\+S\+G\+D} (struct \hyperlink{structnetwork}{network} net, matrix\+\_\+double training\+\_\+data, matrix\+\_\+double training\+\_\+labels, int epochs, int mini\+\_\+batch\+\_\+size, double eta)
+\item 
+void \hyperlink{neuron_8h_a1f3cef3e101a14562aee3d724feed82b}{network\+\_\+backprop} (struct \hyperlink{structnetwork}{network} net, matrix\+\_\+double training\+\_\+data, matrix\+\_\+double training\+\_\+labels)
+\item 
+void \hyperlink{neuron_8h_a33364d398da1f378147e94435761bd5c}{shuffle\+\_\+data} (matrix\+\_\+double data, matrix\+\_\+double labels)
+\item 
+void \hyperlink{neuron_8h_ae47676df741e5cf8908a0488b2da9ff5}{vectorized\+\_\+sigma} (matrix\+\_\+double matrix)
+\item 
+double \hyperlink{neuron_8h_a17b3405046ccbbabeb791bfe8d35fb29}{sigma} (double x)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface to c\+Neuron. 
+
+\begin{DoxyAuthor}{Author}
+Alvaro Abella Bascaran 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+7 apr 2015 
+\end{DoxyDate}
+\begin{DoxySeeAlso}{See also}
+\href{https://github.com/alvaroabascar/cneuron.git}{\tt https\+://github.\+com/alvaroabascar/cneuron.\+git} 
+\end{DoxySeeAlso}
+
+
+\subsection{Function Documentation}
+\hypertarget{neuron_8h_ad245baf72a54be50db3a8dfff5c65685}{}\index{neuron.\+h@{neuron.\+h}!create\+\_\+network@{create\+\_\+network}}
+\index{create\+\_\+network@{create\+\_\+network}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{create\+\_\+network(int n\+\_\+layers, int $\ast$n\+\_\+neurons)}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf network} create\+\_\+network (
+\begin{DoxyParamCaption}
+\item[{int}]{n\+\_\+layers, }
+\item[{int $\ast$}]{net\+\_\+structure}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_ad245baf72a54be50db3a8dfff5c65685}
+Create a neural network with as many layers as indicated with the int \char`\"{}n\+\_\+layers\char`\"{}. Each layer will contain the number of neurons indicated by the corresponding position of the array \char`\"{}net\+\_\+structure\char`\"{}. Eg. layer 3 will have net\+\_\+structure\mbox{[}3\mbox{]} neurons.
+
+The network is dynamically allocated with mallocs, and thus must be manually destroyed after done working with it, calling destroy\+\_\+network. \hypertarget{neuron_8h_a1538aaa323b555618735cd945a0683e7}{}\index{neuron.\+h@{neuron.\+h}!destroy\+\_\+network@{destroy\+\_\+network}}
+\index{destroy\+\_\+network@{destroy\+\_\+network}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{destroy\+\_\+network(struct network net)}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\+\_\+network (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a1538aaa323b555618735cd945a0683e7}
+Release the space allocated for a neural network. \hypertarget{neuron_8h_a12e977cbbe5d8fd519da65e2e35a635e}{}\index{neuron.\+h@{neuron.\+h}!feedforward@{feedforward}}
+\index{feedforward@{feedforward}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{feedforward(struct network net, double $\ast$input, double $\ast$output)}]{\setlength{\rightskip}{0pt plus 5cm}void feedforward (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{, }
+\item[{double $\ast$}]{input, }
+\item[{double $\ast$}]{output}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a12e977cbbe5d8fd519da65e2e35a635e}
+given an input to the network (an array of activations of the first layer), perform a feedforward pass and return the output (activations of the last layer) in the array \char`\"{}output\char`\"{}, which must have enough space allocated prior the function call. \hypertarget{neuron_8h_a70a31e04f5db89c6ec4b32abe04119b8}{}\index{neuron.\+h@{neuron.\+h}!load\+\_\+network@{load\+\_\+network}}
+\index{load\+\_\+network@{load\+\_\+network}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{load\+\_\+network(char $\ast$filename)}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf network} load\+\_\+network (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a70a31e04f5db89c6ec4b32abe04119b8}
+Load weights and biases in binary format from the specified file. \hypertarget{neuron_8h_a1f3cef3e101a14562aee3d724feed82b}{}\index{neuron.\+h@{neuron.\+h}!network\+\_\+backprop@{network\+\_\+backprop}}
+\index{network\+\_\+backprop@{network\+\_\+backprop}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{network\+\_\+backprop(struct network net, matrix\+\_\+double training\+\_\+data, matrix\+\_\+double training\+\_\+labels)}]{\setlength{\rightskip}{0pt plus 5cm}void network\+\_\+backprop (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{, }
+\item[{matrix\+\_\+double}]{training\+\_\+data, }
+\item[{matrix\+\_\+double}]{training\+\_\+labels}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a1f3cef3e101a14562aee3d724feed82b}
+Backpropagation algorithm.
+
+Inputs\+: net -\/$>$ the network training\+\_\+data -\/$>$ a matrix\+\_\+double which contains a set of training inputs (one input per column). training\+\_\+labels -\/$>$ a matrix\+\_\+double which contains the corresponding outputs (labels), one per column. The ith label is the correct output of the ith training input. \hypertarget{neuron_8h_a8a4dfceb11ba2abf1a02c600bcd0c730}{}\index{neuron.\+h@{neuron.\+h}!network\+\_\+\+S\+G\+D@{network\+\_\+\+S\+G\+D}}
+\index{network\+\_\+\+S\+G\+D@{network\+\_\+\+S\+G\+D}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{network\+\_\+\+S\+G\+D(struct network net, matrix\+\_\+double training\+\_\+data, matrix\+\_\+double training\+\_\+labels, int epochs, int mini\+\_\+batch\+\_\+size, double eta)}]{\setlength{\rightskip}{0pt plus 5cm}void network\+\_\+\+S\+G\+D (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{, }
+\item[{matrix\+\_\+double}]{training\+\_\+data, }
+\item[{matrix\+\_\+double}]{training\+\_\+labels, }
+\item[{int}]{epochs, }
+\item[{int}]{mini\+\_\+batch\+\_\+size, }
+\item[{double}]{eta}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a8a4dfceb11ba2abf1a02c600bcd0c730}
+Stochastic Gradient Descent
+
+Parameters\+: net -\/$>$ network to be trained. training\+\_\+data -\/$>$ matrix of inputs. Each column is an input. training\+\_\+data\+\_\+labels -\/$>$ matrix of outputs. Each column is an output. epochs -\/$>$ number of runs across the whole training set. mini\+\_\+batch\+\_\+size -\/$>$ number of training inputs to use in each run of the backpropagation. \hypertarget{neuron_8h_af5f94200073974e51d9edf891a84ec24}{}\index{neuron.\+h@{neuron.\+h}!save\+\_\+network@{save\+\_\+network}}
+\index{save\+\_\+network@{save\+\_\+network}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{save\+\_\+network(struct network net, char $\ast$filename)}]{\setlength{\rightskip}{0pt plus 5cm}void save\+\_\+network (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{, }
+\item[{char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_af5f94200073974e51d9edf891a84ec24}
+Save weights and biases in binary format, to the specified file. \hypertarget{neuron_8h_afdac54269b3cfb4fce5ac8876375398d}{}\index{neuron.\+h@{neuron.\+h}!set\+\_\+random\+\_\+weights\+\_\+biases@{set\+\_\+random\+\_\+weights\+\_\+biases}}
+\index{set\+\_\+random\+\_\+weights\+\_\+biases@{set\+\_\+random\+\_\+weights\+\_\+biases}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{set\+\_\+random\+\_\+weights\+\_\+biases(struct network net)}]{\setlength{\rightskip}{0pt plus 5cm}void set\+\_\+random\+\_\+weights\+\_\+biases (
+\begin{DoxyParamCaption}
+\item[{struct {\bf network} net}]{}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_afdac54269b3cfb4fce5ac8876375398d}
+Add random weights and biases, distributed normally with mean 0 and standard deviation 1. \hypertarget{neuron_8h_a33364d398da1f378147e94435761bd5c}{}\index{neuron.\+h@{neuron.\+h}!shuffle\+\_\+data@{shuffle\+\_\+data}}
+\index{shuffle\+\_\+data@{shuffle\+\_\+data}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{shuffle\+\_\+data(matrix\+\_\+double data, matrix\+\_\+double labels)}]{\setlength{\rightskip}{0pt plus 5cm}void shuffle\+\_\+data (
+\begin{DoxyParamCaption}
+\item[{matrix\+\_\+double}]{data, }
+\item[{matrix\+\_\+double}]{labels}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a33364d398da1f378147e94435761bd5c}
+Given a couple of matrix\+\_\+double, one with the training inputs (data) and another with the labels (labels), shuffles the columns of both matices, but conserving the correspondence of columns from \char`\"{}data\char`\"{} and \char`\"{}labels\char`\"{}.
+
+The algorithm used is Fisher-\/\+Yates. \hypertarget{neuron_8h_a17b3405046ccbbabeb791bfe8d35fb29}{}\index{neuron.\+h@{neuron.\+h}!sigma@{sigma}}
+\index{sigma@{sigma}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{sigma(double x)}]{\setlength{\rightskip}{0pt plus 5cm}double sigma (
+\begin{DoxyParamCaption}
+\item[{double}]{x}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_a17b3405046ccbbabeb791bfe8d35fb29}
+Sigmoid function\+: s(x) = 1 / (1 + exp(-\/x)) \hypertarget{neuron_8h_ae47676df741e5cf8908a0488b2da9ff5}{}\index{neuron.\+h@{neuron.\+h}!vectorized\+\_\+sigma@{vectorized\+\_\+sigma}}
+\index{vectorized\+\_\+sigma@{vectorized\+\_\+sigma}!neuron.\+h@{neuron.\+h}}
+\subsubsection[{vectorized\+\_\+sigma(matrix\+\_\+double matrix)}]{\setlength{\rightskip}{0pt plus 5cm}void vectorized\+\_\+sigma (
+\begin{DoxyParamCaption}
+\item[{matrix\+\_\+double}]{matrix}
+\end{DoxyParamCaption}
+)}\label{neuron_8h_ae47676df741e5cf8908a0488b2da9ff5}
+Apply the sigmoid function to all elements of matrix. The original matrix is altered. 
