@@ -6,7 +6,15 @@
 #include <matrix.h>
 #include <random.h>
 
-/* allocate space and return a network */
+/**
+ * Create a neural network with as many layers as indicated with the int
+ * "n_layers". Each layer will contain the number of neurons indicated by
+ * the corresponding position of the array "net_structure". Eg. layer 3
+ * will have net_structure[3] neurons.
+ *
+ * The network is dynamically allocated with mallocs, and thus must be
+ * manually destroyed after done working with it, calling destroy_network.
+ */
 struct network create_network(int n_layers, int *net_structure)
 {
   int i, j;
@@ -37,7 +45,8 @@ struct network create_network(int n_layers, int *net_structure)
   return net;
 }
 
-/* Add random weights and biases, distributed normally with mean 0 and
+/**
+ * Add random weights and biases, distributed normally with mean 0 and
  * standard deviation 1.
  */
 void set_random_weights_biases(struct network net)
@@ -54,7 +63,9 @@ void set_random_weights_biases(struct network net)
   }
 }
 
-/* free the memory used for a network. */
+/**
+ * Release the space allocated for a neural network.
+ */
 void destroy_network(struct network net)
 {
   int i, j, k;
@@ -69,8 +80,11 @@ void destroy_network(struct network net)
   free(net.net_structure);
 }
 
-/* given an input to the network (an array of activations of the first layer),
- * perform a feedforward pass and return the output in the array "output"
+/**
+ * given an input to the network (an array of activations of the first
+ * layer), perform a feedforward pass and return the output (activations
+ * of the last layer) in the array "output", which must have enough space
+ * allocated prior the function call.
  */
 void feedforward(struct network net, double *input, double *output)
 {
@@ -81,11 +95,6 @@ void feedforward(struct network net, double *input, double *output)
   set_column_matrix_double(activation, input, 0);
 
   for (l = 1; l < net.n_layers; l++) {
-    /* DEBUG */
-    printf("layer %d\n", l);
-    printf("weights[%d]:\n", l-1);
-    print_matrix_double(net.weights[l-1]);
-    /*********/
     /* allocate a matrix (1 column) for the weighted inputs of layer "l" */
     zs = matrix_product_matrix_double(net.weights[l-1], activation);
     free_matrix_double(activation);
@@ -99,7 +108,9 @@ void feedforward(struct network net, double *input, double *output)
   free_matrix_double(activation);
 }
 
-/* Save weights and biases in binary format, to the specified file */
+/**
+ * Save weights and biases in binary format, to the specified file.
+ */
 void save_network(struct network net, char *filename)
 {
   int l, i, j, n_neurons, n_neurons_prev;
@@ -123,7 +134,9 @@ void save_network(struct network net, char *filename)
   fclose(ptr);
 }
 
-/* Load weights and biases in binary format from the specified file */
+/**
+ * Load weights and biases in binary format from the specified file.
+ */
 struct network load_network(char *filename)
 {
   int l, i, j, n_layers, *net_structure, n_neurons, n_neurons_prev;
@@ -149,7 +162,8 @@ struct network load_network(char *filename)
   return net;
 }
 
-/* Stochastic Gradient Descent
+/**
+ * Stochastic Gradient Descent
  *
  * Parameters:
  *   net -> network to be trained.
@@ -188,6 +202,17 @@ void network_SGD(struct network net, matrix_double training_data,
   }
 }
 
+/**
+ * Backpropagation algorithm.
+ *
+ * Inputs:
+ *    net -> the network
+ *    training_data -> a matrix_double which contains a set of training
+ *                     inputs (one input per column).
+ *    training_labels -> a matrix_double which contains the corresponding
+ *                       outputs (labels), one per column. The ith label
+ *                       is the correct output of the ith training input.
+ */
 void network_backprop(struct network net, matrix_double training_data,
                       matrix_double training_labels)
 {
@@ -225,8 +250,6 @@ void network_backprop(struct network net, matrix_double training_data,
     }
   }
 
-
-
   /* clean up */
   for (i = 0; i < training_data.ncols; i++) {
     for (l = 0; l < net.n_layers; l++) {
@@ -240,6 +263,13 @@ void network_backprop(struct network net, matrix_double training_data,
   free(zs);
 }
 
+/**
+ * Given a couple of matrix_double, one with the training inputs (data) and
+ * another with the labels (labels), shuffles the columns of both matices,
+ * but conserving the correspondence of columns from "data" and "labels".
+ *
+ * The algorithm used is Fisher-Yates.
+ */
 void shuffle_data(matrix_double data, matrix_double labels)
 {
   int i, j;
@@ -250,7 +280,10 @@ void shuffle_data(matrix_double data, matrix_double labels)
   }
 }
 
-/* apply sigmoid function to all elements of matrix */
+/**
+ * Apply the sigmoid function to all elements of matrix. The original matrix
+ * is altered.
+ */
 void vectorized_sigma(matrix_double matrix)
 {
   int i, j;
@@ -259,7 +292,9 @@ void vectorized_sigma(matrix_double matrix)
       matrix.data[i][j] = sigma(matrix.data[i][j]);
 }
 
-/* sigmoid function */
+/**
+ * Sigmoid function: s(x) = 1 / (1 + exp(-x))
+ */
 double sigma(double x)
 {
   return 1 / (1 + exp(-x));
