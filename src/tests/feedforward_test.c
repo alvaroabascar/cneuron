@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
   struct network net = load_network("feedforward_test.net");
   feedforward(net, input, output);
   destroy_network(net);
-  printf("correct output: 0.7111\nactual output:\n");
+  printf("correct output: 0.6290\nactual output:\n");
   print_array_double(OUT, output);
   return 0;
 }
