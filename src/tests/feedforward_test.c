@@ -2,11 +2,9 @@
 #include <stdio.h>
 
 #define IN 2
-#define HIDDEN 2
 #define OUT 1
 int main(int argc, char *argv[])
 {
-  int net_structure[3] = {IN, HIDDEN, OUT};
   double input[IN] = {1, 2};
   double output[OUT];
   struct network net = load_network("feedforward_test.net");
