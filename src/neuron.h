@@ -46,6 +46,8 @@ void network_SGD(struct network net, matrix_double training_data,
 void network_backprop(struct network net, matrix_double training_data,
                       matrix_double training_labels);
 
+matrix_double calculate_costs(matrix_double labels, matrix_double outputs[labels.ncols]);
+
 void shuffle_data(matrix_double data, matrix_double labels);
 
 void vectorized_sigma(matrix_double matrix);

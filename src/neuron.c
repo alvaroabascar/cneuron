@@ -92,7 +92,7 @@ void feedforward(struct network net, double *input, double *output)
   matrix_double activation, zs;
   /* fill activation (vertical vector) with the inputs */
   activation = alloc_matrix_double(net.net_structure[0], 1);
-  set_column_matrix_double(activation, input, 0);
+  set_col_matrix_double(activation, input, 0);
 
   for (l = 1; l < net.n_layers; l++) {
     /* allocate a matrix (1 column) for the weighted inputs of layer "l" */
@@ -188,15 +188,14 @@ void network_SGD(struct network net, matrix_double training_data,
        * or with all the remaining training cases.
        */
       k = j + mini_batch_size;
-      k = k >= data_size ? data_size - 1: k;
+      k = k > data_size ? data_size : k;
       section.a = (struct coordinate) { .row = 0, .col = j };
       section.b = (struct coordinate) { .row = training_data.nrows, .col = k };
       mini_batch_data = extract_section_matrix_double(training_data, section);
       section.b.row = training_labels.nrows;
       mini_batch_labels = extract_section_matrix_double(training_labels,
                                                         section);
-      network_backprop(net, mini_batch_data, mini_batch_labels);
-      free_matrix_double(mini_batch_data);
+      network_backprop(net, mini_batch_data, mini_batch_labels); free_matrix_double(mini_batch_data);
       free_matrix_double(mini_batch_labels);
     }
   }
@@ -213,56 +212,73 @@ void network_SGD(struct network net, matrix_double training_data,
  *                       outputs (labels), one per column. The ith label
  *                       is the correct output of the ith training input.
  */
-void network_backprop(struct network net, matrix_double training_data,
-                      matrix_double training_labels)
+void network_backprop(struct network net, matrix_double training_data, matrix_double training_labels)
 {
-  int i, l;
-  double tmp[training_data.nrows];
-  /* activation[i][j] = activation of jth layer, for the input number "i"
-   * zs[i][j] = weighted inputs of jth layer, for input number "i"
+  /* We must compute the gradient with respect to the biases and weights of the
+   * network. The first step is to compute the errors in the output layer. In
+   * order to do so, we must do a feedforward pass for every input. Along the
+   * way we will store all the weighted inputs (zs) and activations (activs).
+   *
+   * zs[l][i] is matrix (array actually, cause it's got one single column) of
+   * weighted inputs of layer "l", when the input is the number "i".
+   *
+   * The same holds for activs[l][i].
    */
-  matrix_double **activation, **zs;
-  activation = malloc(sizeof(matrix_double *) * training_data.ncols);
-  zs = malloc(sizeof(matrix_double *) * training_data.ncols);
+  int i, l;
+  double input[training_data.nrows];
+  matrix_double zs[net.n_layers][training_data.ncols];
+  matrix_double activs[net.n_layers][training_data.ncols];
+  matrix_double costs;
   /* for each training input... */
   for (i = 0; i < training_data.ncols; i++) {
-    activation[i] = malloc(sizeof(matrix_double) * net.n_layers);
-    zs[i] = malloc(sizeof(matrix_double) * net.n_layers);
-    /* STEP 1: set the inputs
-     * allocate a matrix (1 column) for the activations of first layer,
-     * fill it with the inputs.
-     */
-    activation[i][0] = alloc_matrix_double(net.net_structure[0], 1);
-    zs[i][0] = alloc_matrix_double(net.net_structure[0], 1);
-    /* fill column 0 with the "ith" inputs (column "i" of training_data) */
-    copy_col_matrix_double(training_data, tmp, 0);
-    set_column_matrix_double(activation[i][0], tmp, 0);
-    /* STEP 2: feedforward
-     * we keep in memory the weighted inputs and activations.
-     */
+    /* Step 1: set the inputs to the network */
+    activs[0][i] = alloc_matrix_double(training_data.nrows, 1);
+    copy_col_matrix_double(training_data, input, i);
+    set_col_matrix_double(activs[0][i], input, 0);
+    /* zs[0] is unused, but it's easier to fill it, for the cleanup */
+    zs[0][i] = alloc_matrix_double(0, 0);
+    /* Step 2: do the feedforward pass */
     for (l = 1; l < net.n_layers; l++) {
-      /* allocate a matrix (1 column) for the activations of layer "l"  */
-      zs[i][l] = matrix_product_matrix_double(net.weights[l-1],
-                                              activation[i][l-1]);
-       /* We must apply the sigmoid function to get the activations. */
-      activation[i][l] = copy_matrix_double(zs[i][l]);
-      vectorized_sigma(activation[i][l]);
+      zs[l][i] = matrix_product_matrix_double(net.weights[l-1], activs[l-1][i]);
+      activs[l][i] = copy_matrix_double(zs[l][i]);
+      vectorized_sigma(activs[l][i]);
     }
+    costs = calculate_costs(training_labels, activs[net.n_layers-1]);
   }
 
-  /* clean up */
+  /* Cleanup */
+  free_matrix_double(costs);
   for (i = 0; i < training_data.ncols; i++) {
-    for (l = 0; l < net.n_layers; l++) {
-      free_matrix_double(activation[i][l]);
-      free_matrix_double(zs[i][l]);
+    for (l = 0; l < training_data.ncols; l++) {
+      free_matrix_double(activs[l][i]);
+      free_matrix_double(zs[l][i]);
     }
-    free(activation[i]);
-    free(zs[i]);
   }
-  free(activation);
-  free(zs);
 }
 
+/**
+ * given a set of set of labels (ie correct outputs) and a set of outputs
+ * (ie actual outputs), calculates the cost for each output and returns them
+ * as a matrix with one single column (one cost per row).
+ *
+ * Input:
+ *    labels:
+ *       matrix of labels. Each column contains a correct output, with entry "i"
+ *       being what should be the activation of neuron "i" in the output layer.
+ *    outputs:
+ *       array of matrix_doubles. Each matrix_double has a single column, and
+ *       row "i" contains the activation of neuron "i" in the output layer.
+ *
+ * Output:
+ *     a matrix_double, with one single row. Column "j" contains the cost of the
+ *     "jth" output provided.
+ */
+matrix_double calculate_costs(matrix_double labels, matrix_double outputs[labels.ncols])
+{
+
+
+  return alloc_matrix_double(0, 0);
+}
 /**
  * Given a couple of matrix_double, one with the training inputs (data) and
  * another with the labels (labels), shuffles the columns of both matices,
