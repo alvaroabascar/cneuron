@@ -43,10 +43,13 @@ void network_SGD(struct network net, matrix_double training_data,
                  matrix_double training_labels, int epochs,
                  int mini_batch_size, double eta);
 
-void network_backprop(struct network net, matrix_double training_data,
+void update_minibatch(struct network net, matrix_double training_data,
                       matrix_double training_labels);
 
-matrix_double calculate_costs(matrix_double labels, matrix_double outputs[labels.ncols]);
+void network_backprop(struct network net, double *input, double *output,
+                      matrix_double nabla_w, matrix_double nabla_b);
+
+matrix_double cost_derivatives(matrix_double output, matrix_double correct_output);
 
 void shuffle_data(matrix_double data, matrix_double labels);
 

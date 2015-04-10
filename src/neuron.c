@@ -195,14 +195,19 @@ void network_SGD(struct network net, matrix_double training_data,
       section.b.row = training_labels.nrows;
       mini_batch_labels = extract_section_matrix_double(training_labels,
                                                         section);
-      network_backprop(net, mini_batch_data, mini_batch_labels); free_matrix_double(mini_batch_data);
+      update_minibatch(net, mini_batch_data, mini_batch_labels);
+      free_matrix_double(mini_batch_data);
       free_matrix_double(mini_batch_labels);
     }
   }
 }
 
 /**
- * Backpropagation algorithm.
+ * Update network weights and biases applying gradient descent with
+ * backpropagation to a single minibatch. The minibatch is composed by
+ * a matrix of inputs (each column is an input) and a matrix of ordered
+ * labels (correct outputs, each column is an output).
+ *
  *
  * Inputs:
  *    net -> the network
@@ -212,7 +217,7 @@ void network_SGD(struct network net, matrix_double training_data,
  *                       outputs (labels), one per column. The ith label
  *                       is the correct output of the ith training input.
  */
-void network_backprop(struct network net, matrix_double training_data, matrix_double training_labels)
+void update_minibatch(struct network net, matrix_double training_data, matrix_double training_labels)
 {
   /* We must compute the gradient with respect to the biases and weights of the
    * network. The first step is to compute the errors in the output layer. In
@@ -226,59 +231,102 @@ void network_backprop(struct network net, matrix_double training_data, matrix_do
    */
   int i, l;
   double input[training_data.nrows];
-  matrix_double zs[net.n_layers][training_data.ncols];
-  matrix_double activs[net.n_layers][training_data.ncols];
-  matrix_double costs;
+  double output[training_labels.nrows];
+  /* gradient from a single input */
+  matrix_double nabla_b, nabla_w;
+  /* sum of gradients (from all inputs) */
+  matrix_double sum_nabla_b, sum_nabla_w;
   /* for each training input... */
   for (i = 0; i < training_data.ncols; i++) {
-    /* Step 1: set the inputs to the network */
-    activs[0][i] = alloc_matrix_double(training_data.nrows, 1);
     copy_col_matrix_double(training_data, input, i);
-    set_col_matrix_double(activs[0][i], input, 0);
-    /* zs[0] is unused, but it's easier to fill it, for the cleanup */
-    zs[0][i] = alloc_matrix_double(0, 0);
-    /* Step 2: do the feedforward pass */
-    for (l = 1; l < net.n_layers; l++) {
-      zs[l][i] = matrix_product_matrix_double(net.weights[l-1], activs[l-1][i]);
-      activs[l][i] = copy_matrix_double(zs[l][i]);
-      vectorized_sigma(activs[l][i]);
-    }
-    costs = calculate_costs(training_labels, activs[net.n_layers-1]);
+    copy_col_matrix_double(training_labels, output, i);
+    network_backprop(net, input, output, nabla_w, nabla_b);
   }
 
   /* Cleanup */
+  free_matrix_double(nabla_b);
+  free_matrix_double(nabla_w);
+}
+
+/**
+ * Backpropagation using gradient descent.
+ *
+ * Input:
+ *
+ *   net -> the neural network to be trained.
+ *
+ *   input -> array of doubles containing an input to the network.
+ *
+ *   output -> array of doubles containing the expected output.
+ *
+ *   nabla_w -> matrix_double which will be filled with the gradients
+ *              with respect to the weights of the network.
+ *
+ *   nabla_b -> matrix_double which will be filled with the gradients
+ *              with respect to the weights of the network.
+ *
+ */
+void network_backprop(struct network net, double *input, double *output,
+                      matrix_double nabla_w, matrix_double nabla_b)
+{
+  int l, n_layers = net.n_layers;
+  matrix_double zs[n_layers];
+  matrix_double activs[n_layers];
+  matrix_double costs;
+  /* this matrix is just used to calculate the costs later */
+  matrix_double output_tmp = alloc_matrix_double(
+                                 net.net_structure[n_layers], 1);
+  set_col_matrix_double(output_tmp, output, 0);
+
+  /* Step 1: set the inputs to the network */
+  activs[0] = alloc_matrix_double(net.net_structure[0], 1);
+  set_col_matrix_double(activs[0], input, 0);
+  /* zs[0] is unused, but it's easier to allocate it, for the cleanup */
+  zs[0] = alloc_matrix_double(0, 0);
+
+  /* Step 2: do the feedforward pass */
+  for (l = 1; l < n_layers; l++) {
+    zs[l] = matrix_product_matrix_double(net.weights[l-1], activs[l-1]);
+    activs[l] = copy_matrix_double(zs[l]);
+    vectorized_sigma(activs[l]);
+  }
+  costs = cost_derivatives(activs[n_layers], output_tmp);
+
+  /* Cleanup */
   free_matrix_double(costs);
-  for (i = 0; i < training_data.ncols; i++) {
-    for (l = 0; l < training_data.ncols; l++) {
-      free_matrix_double(activs[l][i]);
-      free_matrix_double(zs[l][i]);
-    }
+  for (l = 0; l < n_layers; l++) {
+    free_matrix_double(activs[l]);
+    free_matrix_double(zs[l]);
   }
 }
 
 /**
- * given a set of set of labels (ie correct outputs) and a set of outputs
- * (ie actual outputs), calculates the cost for each output and returns them
- * as a matrix with one single column (one cost per row).
+ * Return a vector (matrix with a single row) of partial derivatives of the
+ * cost. The quadratic cost is:
+ *            C = 0.5 * sum_over_i(output_i - correct_output_i)^2
+ *
+ * And thus the derivative with respect to i is just:
+ *            dC/di = output_i - correct_output_i
  *
  * Input:
- *    labels:
- *       matrix of labels. Each column contains a correct output, with entry "i"
- *       being what should be the activation of neuron "i" in the output layer.
- *    outputs:
- *       array of matrix_doubles. Each matrix_double has a single column, and
- *       row "i" contains the activation of neuron "i" in the output layer.
+ *        output -> matrix of output from the network (single column)
+ *        correct_output -> matrix of correct outputs from the network (single
+ *                          column)
  *
  * Output:
- *     a matrix_double, with one single row. Column "j" contains the cost of the
- *     "jth" output provided.
+ *        a matrix_double with a single row. Column "i" corresponds to the
+ *        partial derivative of the cost with respect to output from neuron
+ *        "i".
  */
-matrix_double calculate_costs(matrix_double labels, matrix_double outputs[labels.ncols])
+matrix_double cost_derivatives(matrix_double output, matrix_double correct_output)
 {
-
-
-  return alloc_matrix_double(0, 0);
+  matrix_double result = copy_matrix_double(output);
+  /* substract from result (which contains now the actual outputs) the
+   * correct outputs */
+  substract_matrix_from_matrix_double(correct_output, result);
+  return result;
 }
+
 /**
  * Given a couple of matrix_double, one with the training inputs (data) and
  * another with the labels (labels), shuffles the columns of both matices,
