@@ -96,7 +96,7 @@ void feedforward(struct network net, double *input, double *output)
 
   for (l = 1; l < net.n_layers; l++) {
     /* allocate a matrix (1 column) for the weighted inputs of layer "l" */
-    zs = matrix_product_matrix_double(net.weights[l-1], activation);
+    zs = matrix_product(net.weights[l-1], activation);
     free_matrix_double(activation);
     /* we must apply the sigmoid function to get the activations. */
     activation = copy_matrix_double(zs);
@@ -233,7 +233,7 @@ void update_minibatch(struct network net, matrix_double training_data, matrix_do
   double input[training_data.nrows];
   double output[training_labels.nrows];
   /* gradient from a single input */
-  matrix_double nabla_b[net.n_layers], nabla_w[net.n_layers];
+  matrix_double nabla_b[net.n_layers-1], nabla_w[net.n_layers-1];
   /* sum of gradients (from all inputs) */
   matrix_double sum_nabla_b, sum_nabla_w;
   /* for each training input... */
@@ -241,13 +241,17 @@ void update_minibatch(struct network net, matrix_double training_data, matrix_do
     copy_col_matrix_double(training_data, input, i);
     copy_col_matrix_double(training_labels, output, i);
     network_backprop(net, input, output, nabla_w, nabla_b);
+    printf("****\n");
+    print_matrix_double(nabla_w[0]);
   }
 
   /* Cleanup */
-  free_matrix_double(nabla_b);
-  free_matrix_double(nabla_w);
-  free_matrix_double(sum_nabla_b);
-  free_matrix_double(sum_nabla_w);
+  for (i = 0; i < net.n_layers-2; i++) {
+    free_matrix_double(nabla_b[i]);
+    free_matrix_double(nabla_w[i]);
+  }
+  /* free_matrix_double(sum_nabla_b); */
+  /* free_matrix_double(sum_nabla_w); */
 }
 
 /**
@@ -278,10 +282,11 @@ void network_backprop(struct network net, double *input, double *output,
   int l, n_layers = net.n_layers;
   matrix_double zs[n_layers];
   matrix_double activs[n_layers];
-  matrix_double costs, deltas, sp_zs; /* sp_zs = sigmoid prime of the zs */
+  matrix_double deltas[n_layers-1];
+  /* sp_zs = sigmoid prime of the zs */
+  matrix_double costs, sp_zs, tmp, term1;
   /* this matrix is just used to calculate the costs later */
-  matrix_double output_tmp = alloc_matrix_double(
-                                 net.net_structure[n_layers], 1);
+  matrix_double output_tmp = alloc_matrix_double(net.net_structure[n_layers-1], 1);
   set_col_matrix_double(output_tmp, output, 0);
 
   /* Step 1: set the inputs to the network */
@@ -292,30 +297,70 @@ void network_backprop(struct network net, double *input, double *output,
 
   /* Step 2: do the feedforward pass */
   for (l = 1; l < n_layers; l++) {
-    zs[l] = matrix_product_matrix_double(net.weights[l-1], activs[l-1]);
+    zs[l] = matrix_product(net.weights[l-1], activs[l-1]);
     activs[l] = copy_matrix_double(zs[l]);
     vectorized_sigmoid(activs[l]);
   }
-  /* Step 3: backpropagate the errors */
-  /* Calculate cost derivatives */
-  costs = cost_derivatives(activs[n_layers], output_tmp);
-  /* Calculate derivative of the sigmoid of the last zs */
-  sp_zs = copy_matrix_double(zs);
-  vectorized_sigmoid_prime(sp_zs);
-  deltas = matrix_product_matrix_double(costs, sp_zs);
+  /* Step 3: backpropagate the errors
+   *
+   * For the last layer. Equation BP1:
+   *
+   * delta = gradient_cost_respect_activs . sigmoid_prime(zs[last layer])
+   * where . = dot product
+   *
+   * For the rest of layers. Equation BP2:
+   *
+   * delta[l] = (transpose(w[l+1]) * delta[l+1]) . sigmoid_prime(zs[l])
+   *
+   */
 
-  nabla_b[n_layers-1] = copy_matrix_double
+  /* Calculate cost derivatives */
+  costs = cost_derivatives(activs[n_layers-1], output_tmp);
+  /* Calculate derivative of the sigmoid of the last zs */
+  sp_zs = copy_matrix_double(zs[net.n_layers-1]);
+  vectorized_sigmoid_prime(sp_zs);
+  /* Calculate deltas of last layer (Equation BP1) */
+  deltas[n_layers-2] = matrix_dot_product(costs, sp_zs);
+
+  /* Finally, gradient with respect to biases/weights */
+  nabla_b[n_layers-2] = copy_matrix_double(deltas[n_layers-2]);
+  tmp = transpose_matrix_double(activs[n_layers-1]);
+  nabla_w[n_layers-2] = matrix_product(deltas[n_layers-2], tmp);
+  free_matrix_double(sp_zs);
+  free_matrix_double(costs);
+  free_matrix_double(tmp);
+  /* Go back through the layers */
+  for (l = n_layers-2; l > 0; l--) {
+    /* First term of the equation BP2 */
+    tmp = transpose_matrix_double(net.weights[l]);
+    term1 = matrix_product(tmp, deltas[l]);
+    /* Second term: */
+    sp_zs = copy_matrix_double(zs[l]);
+    vectorized_sigmoid_prime(sp_zs);
+    /* Finally, compute the deltas with BP2: */
+    deltas[l-1] = matrix_dot_product(tmp, sp_zs);
+    nabla_b[l-1] = copy_matrix_double(deltas[l-1]);
+    free_matrix_double(tmp);
+    tmp = transpose_matrix_double(activs[l-1]);
+    nabla_w[l-1] = matrix_product(deltas[l-1], tmp);
+
+    free_matrix_double(sp_zs);
+    free_matrix_double(tmp);
+    free_matrix_double(term1);
+  }
 
   /* Cleanup */
-  free_matrix_double(costs);
   for (l = 0; l < n_layers; l++) {
     free_matrix_double(activs[l]);
     free_matrix_double(zs[l]);
   }
+  for (l = 0; l < n_layers-1; l++) {
+    free_matrix_double(deltas[l]);
+  }
 }
 
 /**
- * Return a vector (matrix with a single row) of partial derivatives of the
+ * Return a vector (matrix with a single col) of partial derivatives of the
  * cost. The quadratic cost is:
  *            C = 0.5 * sum_over_i(output_i - correct_output_i)^2
  *
@@ -328,7 +373,7 @@ void network_backprop(struct network net, double *input, double *output,
  *                          column)
  *
  * Output:
- *        a matrix_double with a single row. Column "i" corresponds to the
+ *        a matrix_double with a single column. Row "i" corresponds to the
  *        partial derivative of the cost with respect to output from neuron
  *        "i".
  */
@@ -371,9 +416,30 @@ void vectorized_sigmoid(matrix_double matrix)
 }
 
 /**
+ * Apply the derivative of the sigmoid function to all elements of matrix.
+ * The original matrix is altered.
+ */
+void vectorized_sigmoid_prime(matrix_double matrix)
+{
+  int i, j;
+  for (i = 0; i < matrix.nrows; i++)
+    for (j = 0; j < matrix.ncols; j++)
+      matrix.data[i][j] = sigmoid_prime(matrix.data[i][j]);
+}
+
+/**
  * Sigmoid function: s(x) = 1 / (1 + exp(-x))
  */
 double sigmoid(double x)
 {
   return 1 / (1 + exp(-x));
+}
+
+/**
+ * Sigmoid derivative: s'(x) = s(x)*(1 - s(x))
+ */
+double sigmoid_prime(double x)
+{
+  double sx = sigmoid(x);
+  return x*(1 - x);
 }

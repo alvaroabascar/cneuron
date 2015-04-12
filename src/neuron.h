@@ -55,4 +55,8 @@ void shuffle_data(matrix_double data, matrix_double labels);
 
 void vectorized_sigmoid(matrix_double matrix);
 
+void vectorized_sigmoid_prime(matrix_double matrix);
+
 double sigmoid(double x);
+
+double sigmoid_prime(double x);

@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 {
   int structure[3] = {2, 4, 1};
   struct network net = create_network(3, structure);
+  set_random_weights_biases(net);
 
   matrix_double data = alloc_matrix_double(2, 5);
   matrix_double labels = alloc_matrix_double(1, 5);
