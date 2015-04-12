@@ -76,7 +76,7 @@ void test(struct network *net, int epoch) {
         maxhits = hits;
         network_save_to_file(net, "mynet.net");
     }
-    printf("Epoch %d: %d / 10000 (%.2f%)\n", epoch, hits,(float)hits/100);
+    printf("Epoch %d: %d / 10000 (%.2f%%)\n", epoch, hits,(float)hits/100);
 }
 
 int main(int argc, char *argv[])
