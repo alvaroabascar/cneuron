@@ -100,7 +100,7 @@ void feedforward(struct network net, double *input, double *output)
     free_matrix_double(activation);
     /* we must apply the sigmoid function to get the activations. */
     activation = copy_matrix_double(zs);
-    vectorized_sigma(activation);
+    vectorized_sigmoid(activation);
     free_matrix_double(zs);
   }
   /* copy the last activations (output from the net) into the output vector */
@@ -233,7 +233,7 @@ void update_minibatch(struct network net, matrix_double training_data, matrix_do
   double input[training_data.nrows];
   double output[training_labels.nrows];
   /* gradient from a single input */
-  matrix_double nabla_b, nabla_w;
+  matrix_double nabla_b[net.n_layers], nabla_w[net.n_layers];
   /* sum of gradients (from all inputs) */
   matrix_double sum_nabla_b, sum_nabla_w;
   /* for each training input... */
@@ -246,6 +246,8 @@ void update_minibatch(struct network net, matrix_double training_data, matrix_do
   /* Cleanup */
   free_matrix_double(nabla_b);
   free_matrix_double(nabla_w);
+  free_matrix_double(sum_nabla_b);
+  free_matrix_double(sum_nabla_w);
 }
 
 /**
@@ -259,20 +261,24 @@ void update_minibatch(struct network net, matrix_double training_data, matrix_do
  *
  *   output -> array of doubles containing the expected output.
  *
- *   nabla_w -> matrix_double which will be filled with the gradients
- *              with respect to the weights of the network.
+ *   nabla_w -> array of matrix_double which will be filled with the gradients
+ *              with respect to the weights of the network. Each matrix (one
+ *              single column) will contain the gradients of the weights of one
+ *              layer.
  *
  *   nabla_b -> matrix_double which will be filled with the gradients
- *              with respect to the weights of the network.
+ *              with respect to the biases of the network. Each matrix (one
+ *              single column) will contain the gradients of the biases of one
+ *              layer.
  *
  */
 void network_backprop(struct network net, double *input, double *output,
-                      matrix_double nabla_w, matrix_double nabla_b)
+                      matrix_double *nabla_w, matrix_double *nabla_b)
 {
   int l, n_layers = net.n_layers;
   matrix_double zs[n_layers];
   matrix_double activs[n_layers];
-  matrix_double costs;
+  matrix_double costs, deltas, sp_zs; /* sp_zs = sigmoid prime of the zs */
   /* this matrix is just used to calculate the costs later */
   matrix_double output_tmp = alloc_matrix_double(
                                  net.net_structure[n_layers], 1);
@@ -288,9 +294,17 @@ void network_backprop(struct network net, double *input, double *output,
   for (l = 1; l < n_layers; l++) {
     zs[l] = matrix_product_matrix_double(net.weights[l-1], activs[l-1]);
     activs[l] = copy_matrix_double(zs[l]);
-    vectorized_sigma(activs[l]);
+    vectorized_sigmoid(activs[l]);
   }
+  /* Step 3: backpropagate the errors */
+  /* Calculate cost derivatives */
   costs = cost_derivatives(activs[n_layers], output_tmp);
+  /* Calculate derivative of the sigmoid of the last zs */
+  sp_zs = copy_matrix_double(zs);
+  vectorized_sigmoid_prime(sp_zs);
+  deltas = matrix_product_matrix_double(costs, sp_zs);
+
+  nabla_b[n_layers-1] = copy_matrix_double
 
   /* Cleanup */
   free_matrix_double(costs);
@@ -348,18 +362,18 @@ void shuffle_data(matrix_double data, matrix_double labels)
  * Apply the sigmoid function to all elements of matrix. The original matrix
  * is altered.
  */
-void vectorized_sigma(matrix_double matrix)
+void vectorized_sigmoid(matrix_double matrix)
 {
   int i, j;
   for (i = 0; i < matrix.nrows; i++)
     for (j = 0; j < matrix.ncols; j++)
-      matrix.data[i][j] = sigma(matrix.data[i][j]);
+      matrix.data[i][j] = sigmoid(matrix.data[i][j]);
 }
 
 /**
  * Sigmoid function: s(x) = 1 / (1 + exp(-x))
  */
-double sigma(double x)
+double sigmoid(double x)
 {
   return 1 / (1 + exp(-x));
 }

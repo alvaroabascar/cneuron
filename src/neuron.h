@@ -47,12 +47,12 @@ void update_minibatch(struct network net, matrix_double training_data,
                       matrix_double training_labels);
 
 void network_backprop(struct network net, double *input, double *output,
-                      matrix_double nabla_w, matrix_double nabla_b);
+                      matrix_double *nabla_w, matrix_double *nabla_b);
 
 matrix_double cost_derivatives(matrix_double output, matrix_double correct_output);
 
 void shuffle_data(matrix_double data, matrix_double labels);
 
-void vectorized_sigma(matrix_double matrix);
+void vectorized_sigmoid(matrix_double matrix);
 
-double sigma(double x);
+double sigmoid(double x);
